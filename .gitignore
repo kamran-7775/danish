@@ -4,6 +4,7 @@ out
 next-env.d.ts
 *.tsbuildinfo
 .env*.local
-data/
+# local database + admin uploads (only the top-level folder, NOT src/data)
+/data/
 .vercel
 .env.cloud
