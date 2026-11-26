@@ -22,8 +22,11 @@ import { extname, join } from "node:path";
 
 const YES = process.argv.includes("--yes");
 const SOURCE = process.env.SOURCE_DB || "file:data/portfolio.db";
-const TARGET = process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL;
-const TARGET_TOKEN = process.env.TURSO_AUTH_TOKEN || process.env.DATABASE_AUTH_TOKEN;
+// same names (and order) as src/lib/db.ts
+const TARGET = process.env.DATABASE_URL || process.env.TURSO_DATABASE_URL;
+const TARGET_TOKEN = ["DATABASE_AUTH_TOKEN", "DATABASE_TOKEN", "TURSO_AUTH_TOKEN", "TURSO_DATABASE_AUTH_TOKEN", "TURSO_TOKEN"]
+  .map((k) => process.env[k])
+  .find(Boolean);
 const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN;
 const UPLOADS = join(process.cwd(), "data", "uploads");
 

@@ -16,9 +16,16 @@ export type ProjectRecord = Project & { sort: number };
 export type BtsItem = { id: string; src: string; caption: string; category: string; shape: "wide" | "tall" | "portrait" | "square"; sort: number };
 export type Showreel = { videoUrl: string; poster: string; tagline: string };
 
-// DATABASE_* or the TURSO_* names that Vercel's Turso integration creates
-const URL = process.env.DATABASE_URL || process.env.TURSO_DATABASE_URL || "file:data/portfolio.db";
-const AUTH_TOKEN = process.env.DATABASE_AUTH_TOKEN || process.env.TURSO_AUTH_TOKEN || undefined;
+// Accept DATABASE_* and the TURSO_* names that Vercel's Turso integration may create.
+const URL_VARS = ["DATABASE_URL", "TURSO_DATABASE_URL"];
+const TOKEN_VARS = ["DATABASE_AUTH_TOKEN", "DATABASE_TOKEN", "TURSO_AUTH_TOKEN", "TURSO_DATABASE_AUTH_TOKEN", "TURSO_TOKEN"];
+const urlVar = URL_VARS.find((k) => process.env[k]);
+const tokenVar = TOKEN_VARS.find((k) => process.env[k]);
+const URL = (urlVar && process.env[urlVar]) || "file:data/portfolio.db";
+const AUTH_TOKEN = (tokenVar && process.env[tokenVar]) || undefined;
+
+/** Which env var NAMES are in use (never the values): for /api/health. */
+export const dbEnv = () => ({ urlVar: urlVar ?? null, tokenVar: tokenVar ?? null });
 
 /* one client per server process (also survives dev hot-reloads) */
 const g = globalThis as unknown as { __db?: Client; __dbReady?: Promise<void> };
