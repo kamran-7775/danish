@@ -37,6 +37,22 @@ export default function MediaField({
   async function upload(file: File) {
     setError("");
     setProgress(0);
+
+    // Stall guard: if nothing moves for 90 s (including waiting at ~100%), stop with a clear message
+    const controller = new AbortController();
+    let lastMove = Date.now();
+    let stalled = false;
+    const moved = (pct: number) => {
+      lastMove = Date.now();
+      setProgress(pct);
+    };
+    const watchdog = window.setInterval(() => {
+      if (Date.now() - lastMove > 90_000) {
+        stalled = true;
+        controller.abort();
+      }
+    }, 5_000);
+
     try {
       if (storage === "blob") {
         const { upload } = await import("@vercel/blob/client");
@@ -44,7 +60,8 @@ export default function MediaField({
           access: "public",
           handleUploadUrl: "/api/admin/upload",
           multipart: file.size > 50 * 1024 * 1024,
-          onUploadProgress: (e) => setProgress(Math.round(e.percentage)),
+          abortSignal: controller.signal,
+          onUploadProgress: (e) => moved(Math.round(e.percentage)),
         });
         setValue(blob.url);
       } else {
@@ -52,8 +69,10 @@ export default function MediaField({
           const xhr = new XMLHttpRequest();
           const body = new FormData();
           body.append("file", file);
+          controller.signal.addEventListener("abort", () => xhr.abort());
+          xhr.onabort = () => reject(new Error("aborted"));
           xhr.open("POST", "/api/admin/upload");
-          xhr.upload.onprogress = (e) => e.lengthComputable && setProgress(Math.round((e.loaded / e.total) * 100));
+          xhr.upload.onprogress = (e) => e.lengthComputable && moved(Math.round((e.loaded / e.total) * 100));
           xhr.onload = () => {
             try {
               const res = JSON.parse(xhr.responseText);
@@ -69,8 +88,13 @@ export default function MediaField({
         setValue(url);
       }
     } catch (e) {
-      setError((e as Error).message || "Upload failed.");
+      setError(
+        stalled
+          ? "Upload stopped: no response for 90 seconds. Check your internet and try again (or use a smaller file / a YouTube link)."
+          : (e as Error).message || "Upload failed."
+      );
     } finally {
+      window.clearInterval(watchdog);
       setProgress(null);
       if (fileRef.current) fileRef.current.value = "";
     }

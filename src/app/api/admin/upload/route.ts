@@ -19,7 +19,9 @@ const MAX_BYTES = 1024 * 1024 * 1024; // 1 GB
 export async function POST(request: Request) {
   const type = request.headers.get("content-type") ?? "";
 
-  // ---- Vercel Blob: issue an upload token (and receive the completion callback) ----
+  // ---- Vercel Blob: issue a short-lived upload token for the browser ----
+  // No onUploadCompleted callback on purpose: we don't need it (the browser gets the file URL
+  // back directly), and a callback Blob can't reach leaves uploads hanging at ~99%.
   if (type.includes("application/json")) {
     const body = (await request.json()) as HandleUploadBody;
     try {
@@ -30,7 +32,6 @@ export async function POST(request: Request) {
           if (!(await isAdmin())) throw new Error("Not signed in.");
           return { allowedContentTypes: ALLOWED, maximumSizeInBytes: MAX_BYTES, addRandomSuffix: true };
         },
-        onUploadCompleted: async () => {},
       });
       return Response.json(result);
     } catch (e) {
