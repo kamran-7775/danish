@@ -185,6 +185,31 @@ export async function getSiteData() {
   return { categories, projects, bts, showreel };
 }
 
+/** The built-in content from src/data/portfolio.ts, in the same shape as getSiteData(). */
+export function fallbackSiteData(): Awaited<ReturnType<typeof getSiteData>> {
+  return {
+    categories: portfolio.workSections.map((s, i) => ({ id: slug(s.category), name: s.category, label: s.band, sort: i })),
+    projects: portfolio.projects.map((p, i) => ({ ...p, sort: i })),
+    bts: portfolio.bts.map((b, i) => ({ ...b, id: `bts-${i + 1}`, sort: i })),
+    showreel: portfolio.showreel,
+  };
+}
+
+/**
+ * Public site data that never breaks the page: if the database can't be reached
+ * (wrong token, outage…), log the error and show the built-in content instead.
+ * The admin and /api/health still report the real problem.
+ */
+export async function getSiteDataSafe() {
+  try {
+    return await getSiteData();
+  } catch (e) {
+    console.error("[portfolio] database unavailable, showing built-in content:", (e as Error).message);
+    g.__dbReady = undefined; // retry the connection on the next request
+    return fallbackSiteData();
+  }
+}
+
 /* ---------------------------------------------------------------------------
    Categories (timeline tracks)
 --------------------------------------------------------------------------- */

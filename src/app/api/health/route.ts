@@ -27,11 +27,16 @@ export async function GET() {
     database = `ERROR: ${reason(e)}`;
   }
 
+  // the classic mistake: copying DATABASE_URL=file:… from .env.local into Vercel
+  if (onVercel && dbInfo().kind === "local") {
+    database = "ERROR: your database URL points to a local file (file:…). On Vercel it must be your Turso URL starting with libsql://";
+  }
+
   const checks = {
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ? "set ✓" : "MISSING ✗",
     ADMIN_SECRET: (process.env.ADMIN_SECRET?.length ?? 0) >= 16 ? "set ✓" : "MISSING or too short ✗ (needs 16+ characters)",
     database_url_variable: env.urlVar ?? (onVercel ? "MISSING ✗" : "none (using local file)"),
-    database_token_variable: env.tokenVar ?? (dbInfo().kind === "remote" ? "MISSING ✗" : "not needed locally"),
+    database_token_variable: env.tokenVar ?? (dbInfo().kind === "remote" || onVercel ? "MISSING ✗ (add DATABASE_AUTH_TOKEN)" : "not needed locally"),
     BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN ? "set ✓" : onVercel ? "MISSING ✗ (uploads won't work)" : "not set (local uploads)",
     database,
     uploads: storageMode() === "blob" ? "Vercel Blob" : "local disk",

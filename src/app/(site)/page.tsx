@@ -1,5 +1,5 @@
 import { portfolio } from "@/data/portfolio";
-import { getSiteData } from "@/lib/db";
+import { getSiteDataSafe } from "@/lib/db";
 import Nav from "@/components/Nav";
 import Hero from "@/components/Hero";
 import Band from "@/components/Band";
@@ -20,7 +20,7 @@ export const revalidate = 3600;
 
 export default async function Home() {
   const { bands } = portfolio;
-  const { categories, projects, bts, showreel } = await getSiteData();
+  const { categories, projects, bts, showreel } = await getSiteDataSafe();
   const tracks = categories.map((c) => ({ category: c.name, band: c.label }));
 
   return (
