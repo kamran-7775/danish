@@ -29,6 +29,7 @@ export default function MediaField({
 }) {
   const [value, setValue] = useState(defaultValue);
   const [progress, setProgress] = useState<number | null>(null);
+  const [rate, setRate] = useState(""); // "2.4 MB/s · about 12 s left"
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -42,11 +43,21 @@ export default function MediaField({
     // internet the bar can sit at ~99% while the file is still travelling. Only give up after
     // 4 minutes with no movement at all.
     const controller = new AbortController();
-    let lastMove = Date.now();
+    const started = Date.now();
+    let lastMove = started;
     let stalled = false;
+    setRate("");
     const moved = (pct: number) => {
       lastMove = Date.now();
       setProgress(pct);
+      // speed + time left, from the bytes sent so far
+      const secs = (lastMove - started) / 1000;
+      const sent = (pct / 100) * file.size;
+      if (secs > 1 && sent > 0 && pct < 99) {
+        const bps = sent / secs;
+        const left = Math.max(1, Math.round((file.size - sent) / bps));
+        setRate(`${(file.size / 1024 / 1024).toFixed(1)} MB file · ${(bps / 1024 / 1024).toFixed(1)} MB/s · about ${left < 60 ? `${left} s` : `${Math.round(left / 60)} min`} left`);
+      }
     };
     const watchdog = window.setInterval(() => {
       if (Date.now() - lastMove > 240_000) {
@@ -61,7 +72,8 @@ export default function MediaField({
         const blob = await upload(`portfolio/${file.name}`, file, {
           access: "public",
           handleUploadUrl: "/api/admin/upload",
-          multipart: file.size > 50 * 1024 * 1024,
+          // big files go up in several parts at once: usually faster on slow connections
+          multipart: file.size > 15 * 1024 * 1024,
           abortSignal: controller.signal,
           onUploadProgress: (e) => moved(Math.round(e.percentage)),
         });
@@ -153,6 +165,9 @@ export default function MediaField({
             <div className="mf__progress" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
               <i style={{ width: `${progress}%` }} />
             </div>
+          )}
+          {progress !== null && progress < 99 && rate && (
+            <p className="adm-hint">{rate}</p>
           )}
           {progress !== null && progress >= 99 && (
             <p className="adm-hint">Still sending the last part. On slow internet this can take a minute or two for big videos. Keep this tab open.</p>
