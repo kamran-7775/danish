@@ -696,3 +696,14 @@ select.adm-input {
   text-align: center;
   color: var(--muted-on-dark, #b7b2aa);
 }
+
+/* live upload numbers under the progress bar */
+.mf__stats {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--a-muted);
+  font-variant-numeric: tabular-nums;
+}
+.mf__stats b {
+  color: var(--a-text);
+}
