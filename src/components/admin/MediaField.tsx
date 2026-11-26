@@ -38,7 +38,9 @@ export default function MediaField({
     setError("");
     setProgress(0);
 
-    // Stall guard: if nothing moves for 90 s (including waiting at ~100%), stop with a clear message
+    // Stall guard. Note: browsers count bytes as "sent" once they leave the page, so on slow
+    // internet the bar can sit at ~99% while the file is still travelling. Only give up after
+    // 4 minutes with no movement at all.
     const controller = new AbortController();
     let lastMove = Date.now();
     let stalled = false;
@@ -47,7 +49,7 @@ export default function MediaField({
       setProgress(pct);
     };
     const watchdog = window.setInterval(() => {
-      if (Date.now() - lastMove > 90_000) {
+      if (Date.now() - lastMove > 240_000) {
         stalled = true;
         controller.abort();
       }
@@ -90,7 +92,7 @@ export default function MediaField({
     } catch (e) {
       setError(
         stalled
-          ? "Upload stopped: no response for 90 seconds. Check your internet and try again (or use a smaller file / a YouTube link)."
+          ? "Upload stopped: no response for 4 minutes. Check your internet and try again (or use a smaller file / a YouTube link)."
           : (e as Error).message || "Upload failed."
       );
     } finally {
@@ -131,7 +133,7 @@ export default function MediaField({
           />
           <div className="mf__buttons">
             <label className={`adm-btn adm-btn--ghost${progress !== null ? " is-busy" : ""}`}>
-              {progress !== null ? `Uploading ${progress}%` : "⬆ Upload file"}
+              {progress === null ? "⬆ Upload file" : progress >= 99 ? "Finishing upload…" : `Uploading ${progress}%`}
               <input
                 ref={fileRef}
                 type="file"
@@ -151,6 +153,9 @@ export default function MediaField({
             <div className="mf__progress" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
               <i style={{ width: `${progress}%` }} />
             </div>
+          )}
+          {progress !== null && progress >= 99 && (
+            <p className="adm-hint">Still sending the last part. On slow internet this can take a minute or two for big videos. Keep this tab open.</p>
           )}
           {error && <p className="mf__error">{error}</p>}
           {hint && <p className="adm-hint">{hint}</p>}
