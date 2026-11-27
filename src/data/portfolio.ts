@@ -72,10 +72,16 @@ export const portfolio = {
     illustration: "/media/portrait-illustration.png",
     // Round avatar used as the "O" in PORTFOLIO (takes priority over the illustration when the file exists)
     avatar: "/media/avatar.png",
+    // Cut-out photo with moving eyes used as the "O" (takes priority over avatar/illustration).
+    // Built from public/media/hero.png by tools/make_hero_cutout.py, which also writes
+    // hero-iris-l.webp / hero-iris-r.webp next to it.
+    face: "/media/hero-cutout.webp",
     // Photo inside the red selection box in About (transparent PNG, portrait)
-    photo: "/media/portrait-photo.png",
-    // Head-and-shoulders cut-out with the red sticker outline (transparent PNG)
-    cutout: "/media/portrait-cutout.png",
+    // (cut-out of public/media/second.png, made by tools/make_about_cutout.py)
+    photo: "/media/about-cutout.webp",
+    // Head-and-shoulders cut-out with the red sticker outline (transparent; made from
+    // public/media/2nd (2).png by tools/make_identity_cutout.py)
+    cutout: "/media/identity-cutout.webp",
   },
 
   education: [
@@ -332,8 +338,8 @@ export const portfolio = {
 
   /* ---------- Contact ---------- */
   contact: {
-    email: "hello@your-domain.com",
-    whatsapp: "+10000000000",
+    email: "danihfz25@gmail.com",
+    whatsapp: "+923183032687", // 0318 3032687 in international format (used for the wa.me link)
     // Optional Formspree/Getform endpoint. Leave "" to open the visitor's email app instead.
     formEndpoint: "",
     projectTypes: [
@@ -349,9 +355,8 @@ export const portfolio = {
 
   socials: [
     { label: "Instagram", url: "https://www.instagram.com/filmbydani011/" },
-    { label: "Behance", url: "https://behance.net/yourhandle" },
+    { label: "Facebook", url: "https://www.facebook.com/profile.php?id=61595401718438" },
     { label: "LinkedIn", url: "https://linkedin.com/in/yourhandle" },
-    { label: "Vimeo", url: "https://vimeo.com/yourhandle" },
     { label: "YouTube", url: "https://youtube.com/@yourhandle" },
   ],
 };

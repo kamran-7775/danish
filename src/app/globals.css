@@ -654,6 +654,18 @@ dd {
   object-fit: cover;
   object-position: center;
 }
+/* Cut-out photo "O" with moving eyes (HeroFace): as tall as the illustration, width hugs the bust */
+.hero__face--photo {
+  width: calc((0.8em * var(--stretch) + 0.2em) * 0.923);
+}
+.hero__face-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  /* black & white portrait (irises included, so the moving eyes match) */
+  filter: grayscale(1) contrast(1.08);
+}
 .hero__bottom {
   display: flex;
   flex-wrap: wrap;
@@ -2451,10 +2463,6 @@ html.is-loading {
   transition:
     transform 1.2s var(--ease) 0.35s,
     opacity 1s var(--ease) 0.35s;
-}
-.about__photo:hover .selection__img {
-  transform: translate3d(0, -6px, 0) rotate(-1deg);
-  transition-delay: 0s;
 }
 .selection__border {
   position: absolute;

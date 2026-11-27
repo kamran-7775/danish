@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { portfolio } from "@/data/portfolio";
 import { Club, PlayIcon, Starburst } from "./Icons";
 import { FacePlaceholder } from "./Placeholders";
+import HeroFace from "./HeroFace";
 import Viewfinder from "./Viewfinder";
 
 /** Giant "PORTF◯LIO" with your illustrated portrait replacing the O. */
@@ -13,7 +14,11 @@ export default function Hero() {
   const right = "LIO".split("");
   const d = (i: number) => ({ "--d": `${0.1 + i * 0.05}s` }) as CSSProperties;
   // Use the round avatar only if the file is actually in /public (checked at build time)
-  const avatar = person.avatar && existsSync(join(process.cwd(), "public", person.avatar)) ? person.avatar : "";
+  const has = (p?: string) => !!p && existsSync(join(process.cwd(), "public", p));
+  // Cut-out photo with moving eyes wins; then the round avatar; then the line-art illustration
+  const face = has(person.face) ? person.face : "";
+  const avatar = !face && has(person.avatar) ? person.avatar : "";
+  const irisSrc = (k: string) => face.replace(/[^/]+$/, `hero-iris-${k}.webp`);
 
   return (
     <section className="hero paper" id="top" aria-labelledby="hero-title">
@@ -35,10 +40,17 @@ export default function Hero() {
               </span>
             </span>
           ))}
-          <span className={`hero__face${avatar ? " hero__face--round" : ""}`} aria-hidden="true" data-reveal style={d(5)}>
+          <span
+            className={`hero__face${face ? " hero__face--photo" : avatar ? " hero__face--round" : ""}`}
+            aria-hidden="true"
+            data-reveal
+            style={d(5)}
+          >
             <span className="hero__face-inner" data-parallax="-0.06">
               <span className="hero__face-follow" data-follow="16">
-                {avatar ? (
+                {face ? (
+                  <HeroFace src={face} irisSrc={[irisSrc("l"), irisSrc("r")]} />
+                ) : avatar ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={avatar} alt="" />
                 ) : person.illustration ? (
